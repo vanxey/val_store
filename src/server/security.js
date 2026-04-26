@@ -6,4 +6,5 @@ export function setHeaders(res){
     res.setHeader('Referrer-Policy', 'no-referrer')
     res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
     res.setHeader('Cache-Control', 'no-store')
+    res.setHeader('Cross-Origin-Resource-Policy', 'same-origin')
 };
