@@ -71,6 +71,28 @@ async function resolveIdentity(accessToken) {
   return puuid;
 }
 
+async function resolveEntitlement(accessToken) {
+  const data = await riotRequest(
+    "entitlements.auth.riotgames.com",
+    "/api/token/v1",
+    "POST",
+    {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "Content-Length": "2",
+    },
+    "{}"
+  );
+
+  const entitlementToken = data?.entitlements_token;
+
+  if (typeof entitlementToken !== "string" || entitlementToken.length === 0) {
+    throw new Error("Entitlement token missing from response");
+  }
+
+  return entitlementToken;
+}
+
 export async function handleProxy(token, res) {
   res.writeHead(200, { "content-type": "application/json" });
   res.end(JSON.stringify({ message: "Proxy reached successfully", token: "received" }));
