@@ -1,4 +1,4 @@
-import { createServer }  from 'node:https';
+import { createServer } from 'node:https';
 import { readFileSync } from 'node:fs';
 import { setHeaders } from './security.js';
 import { route } from './router.js';

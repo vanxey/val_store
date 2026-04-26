@@ -1,12 +1,52 @@
-import { readFileSync } from "node:fs";
+import { readFileSync } from 'node:fs';
+import { extname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const CLIENT_DIR = resolve(__dirname, "../client");
+
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css':  'text/css; charset=utf-8',
+  '.js':   'application/javascript; charset=utf-8',
+  '.ico':  'image/x-icon',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.svg':  'image/svg+xml',
+};
+
+function serveStatic (res, filePath){
+    const ext = extname(filePath)
+    //console.log('Attempting to read:', filePath);
+    let content;
+
+    try {
+        content = readFileSync(filePath)
+    } catch (error) {
+        res.writeHead(404, {"content-type": "text/plain"});
+        res.end("Not found");
+        return;
+    }
+
+    const mime = MIME_TYPES[ext] ?? "application/octet-stream";
+    res.writeHead(200, {"content-type": mime});
+    res.end(content);
+}
 
 export function route (req, res){
     const method = req.method;
     const url = req.url;
+    // console.log(method, url);
+    // console.log('CLIENT_DIR:', CLIENT_DIR);
 
-    if(method === "GET" && url === "/"){
-        res.writeHead(200, {"content-type": "text/plain"});
-        res.end("Valo store is live");
+    if(method === "GET" && (url === "/" || url === "/index.html")){
+        serveStatic(res, join(CLIENT_DIR, "index.html"));
+        return;
+    }
+
+    if(method === "GET"){
+        const cleanUrl = url.split("?")[0];
+        serveStatic(res, join(CLIENT_DIR, cleanUrl));
         return;
     }
 
