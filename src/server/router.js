@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const CLIENT_DIR = resolve(__dirname, "../client");
 
+const ALLOWED_EXTENSIONS = new Set(['.html', '.css', '.js', '.ico', '.png', '.jpg', '.svg']);
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css':  'text/css; charset=utf-8',
@@ -15,9 +17,35 @@ const MIME_TYPES = {
   '.svg':  'image/svg+xml',
 };
 
+function safeResolve(requestedUrl) {
+  const withoutQuery = requestedUrl.split('?')[0];
+  let decoded;
+
+  try {
+    decoded = decodeURIComponent(withoutQuery);
+  } catch {
+    return null;
+  }
+
+  const absolute = resolve(join(CLIENT_DIR, decoded));
+
+  if (!absolute.startsWith(CLIENT_DIR + '/') && absolute !== CLIENT_DIR) {
+    return null;
+  }
+
+  return absolute;
+}
+
+
 function serveStatic (res, filePath){
     const ext = extname(filePath)
     //console.log('Attempting to read:', filePath);
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
+        res.writeHead(403, { "content-type": "text/plain" });
+        res.end("Forbidden");
+        return;
+    }
+
     let content;
 
     try {
@@ -44,9 +72,15 @@ export function route (req, res){
         return;
     }
 
-    if(method === "GET"){
-        const cleanUrl = url.split("?")[0];
-        serveStatic(res, join(CLIENT_DIR, cleanUrl));
+    if (method === 'GET') {
+        const safePath = safeResolve(url);
+
+        if (safePath === null) {
+            res.writeHead(400, { 'Content-Type': 'text/plain' });
+            res.end('Bad Request');
+            return;
+        }
+        serveStatic(res, safePath);
         return;
     }
 
