@@ -1,10 +1,5 @@
 import { request as httpsRequest } from 'node:https';
 
-export async function handleProxy(token, res) {
-  res.writeHead(200, { "content-type": "application/json" });
-  res.end(JSON.stringify({ message: "Proxy reached successfully", token: "received" }));
-}
-
 const UPSTREAM_TIMEOUT_MS = 10_000;
 
 function riotRequest(host, path, method, headers, body = null) {
@@ -52,5 +47,32 @@ function riotRequest(host, path, method, headers, body = null) {
 
     req.end();
   });
+}
+
+async function resolveIdentity(accessToken) {
+  const data = await riotRequest(
+    "auth.riotgames.com",
+    "/userinfo",
+    "GET",
+    { Authorization: `Bearer ${accessToken}` }
+  );
+
+  const puuid = data?.sub;
+
+  if (typeof puuid !== "string" || puuid.length === 0) {
+    throw new Error("PUUID missing from userinfo response");
+  }
+
+  const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_PATTERN.test(puuid)) {
+    throw new Error("PUUID failed format validation");
+  }
+
+  return puuid;
+}
+
+export async function handleProxy(token, res) {
+  res.writeHead(200, { "content-type": "application/json" });
+  res.end(JSON.stringify({ message: "Proxy reached successfully", token: "received" }));
 }
 
