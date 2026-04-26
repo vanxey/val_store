@@ -14,6 +14,14 @@ const server = createServer(sslOptions, (req, res) => {
     setHeaders(res)
 });
 
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception:', err.message);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason?.message ?? reason);
+});
+
 server.on('error', (error) => {
   console.error('Server error:', error);
 });
