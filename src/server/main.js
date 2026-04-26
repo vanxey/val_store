@@ -11,7 +11,7 @@ const sslOptions = {
 };
 
 const server = createServer(sslOptions, (req, res) => {
-
+    setHeaders(res)
 });
 
 server.on('error', (error) => {
