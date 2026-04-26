@@ -1,6 +1,7 @@
 import { createServer }  from 'node:https';
 import { readFileSync } from 'node:fs';
 import { setHeaders } from './security.js';
+import { route } from './router.js';
 
 const sslOptions = {
     key: readFileSync('./certs/private-key.pem'),
@@ -12,6 +13,12 @@ const sslOptions = {
 
 const server = createServer(sslOptions, (req, res) => {
     setHeaders(res)
+    route(req, res)
+});
+
+//error handling
+server.on('error', (error) => {
+  console.error('Server error:', error);
 });
 
 process.on('uncaughtException', (err) => {
@@ -22,10 +29,7 @@ process.on('unhandledRejection', (reason) => {
   console.error('Unhandled rejection:', reason?.message ?? reason);
 });
 
-server.on('error', (error) => {
-  console.error('Server error:', error);
-});
-
+//graceful shutdown
 function shutdown() {
   console.log('Shutting down...');
   server.close(() => {
@@ -37,6 +41,7 @@ function shutdown() {
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
+//starting server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running at https://localhost:${PORT}`);
