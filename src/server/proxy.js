@@ -22,14 +22,19 @@ function riotRequest(host, path, method, headers, body = null) {
       res.on("data", (chunk) => { raw += chunk; });
 
       res.on("end", () => {
+        // console.log("Riot response status:", res.statusCode);
+        // console.log("Riot response body:", raw);
+
         if (res.statusCode < 200 || res.statusCode >= 300) {
-          reject(new Error(`Upstream failed with status ${res.statusCode}`));
+            //reject(new Error(`[Riot API] ${method} ${host}${path} failed (${res.statusCode}): ${raw}`));
+           reject(new Error(`Upstream failed with status ${res.statusCode}`));
           return;
         }
 
         try {
           resolve(JSON.parse(raw));
         } catch {
+            //reject(new Error(`Riot returned non JSON response from ${host}${path}`));
           reject(new Error("Riot returned non JSON response"));
         }
       });
@@ -93,8 +98,78 @@ async function resolveEntitlement(accessToken) {
   return entitlementToken;
 }
 
-export async function handleProxy(token, res) {
-  res.writeHead(200, { "content-type": "application/json" });
-  res.end(JSON.stringify({ message: "Proxy reached successfully", token: "received" }));
+async function fetchStore(puuid, accessToken, entitlementToken) {
+  const data = await riotRequest(
+    "pd.eu.a.pvp.net",
+    `/store/v3/storefront/${puuid.trim()}`,
+    "POST",
+    {
+      Authorization: `Bearer ${accessToken}`,
+      "X-Riot-Entitlements-JWT": entitlementToken,
+      "X-Riot-ClientPlatform": "ew0KCSJwbGF0Zm9ybVR5cGUiOiAiUEMiLA0KCSJwbGF0Zm9ybU9TIjogIldpbmRvd3MiLA0KCSJwbGF0Zm9ybU9TVmVyc2lvbiI6ICIxMC4wLjE5MDQyLjEuMjU2LjY0Yml0IiwNCgkicGxhdGZvcm1DaGlwc2V0IjogIlVua25vd24iDQp9",
+      "X-Riot-ClientVersion": "release-12.07-shipping-9-4488404",
+      "Content-Type": "application/json",
+      "Content-Length": "2" 
+    },
+    "{}"
+  );
+
+  return data;
+}
+
+function cleanStore(raw) {
+  const panel = raw?.SkinsPanelLayout;
+
+  if (!panel) {
+    throw new Error('Unexpected store response shape');
+  }
+
+  return {
+    offers: panel.SingleItemOffers ?? [],
+    remainingSeconds: panel.SingleItemOffersRemainingDurationInSeconds ?? 0,
+  };
+}
+
+export async function handleProxy(accessToken, res) {
+    try {
+        const [puuid, entitlementToken] = await Promise.all([
+            resolveIdentity(accessToken),
+            resolveEntitlement(accessToken),
+        ]);
+
+        const rawStore = await fetchStore(puuid, accessToken, entitlementToken);
+        const store = cleanStore(rawStore);
+
+        res.writeHead(200, { "content-type": "application/json" });
+        //res.end(JSON.stringify({ message: "Proxy reached successfully", token: "received" }));
+        res.end(JSON.stringify(store));
+
+    } catch (error) {
+        // console.error(error)
+        console.error("Proxy error:", error.message);
+        if (error.message.includes("Upstream failed with status")) {
+
+            // const status = parseInt(error.message.split(" ").pop());
+
+            // if (status === 400 || status === 401 || status === 403) {
+            //     res.writeHead(401, { "content-type": "application/json" });
+            //     res.end(JSON.stringify({ error: "Invalid or expired token" }));
+            //     return;
+            // }
+
+            res.writeHead(502, { "content-type": "application/json" });
+            res.end(JSON.stringify({ error: "Bad gateway" }));
+            return;
+        }
+
+            if (error.message === "Upstream request timed out") {
+                res.writeHead(504, { "content-type": "application/json" });
+                res.end(JSON.stringify({ error: "Gateway timeout" }));
+                return;
+            }
+
+            res.writeHead(500, { "content-type": "application/json" });
+            res.end(JSON.stringify({ error: "Internal server error" }));
+    }
 }
 

@@ -21,8 +21,8 @@ server.on('error', (error) => {
   console.error('Server error:', error);
 });
 
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught exception:', err.message);
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error.message);
 });
 
 process.on('unhandledRejection', (reason) => {
