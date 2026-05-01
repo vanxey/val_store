@@ -10,7 +10,8 @@ function riotRequest(host, path, method, headers, body = null) {
       method,
       headers: {
         ...headers,
-        "User-Agent": "ValoStoreTracker/1.0",
+        "User-Agent": "ShooterGame/13 Windows/10.0.19043.1.256.64bit",
+        // "User-Agent": "ValoStoreTracker/1.0",
       },
       minVersion: "TLSv1.3",
       maxVersion: "TLSv1.3",
@@ -98,6 +99,25 @@ async function resolveEntitlement(accessToken) {
   return entitlementToken;
 }
 
+async function resolveSkins(offers) {
+  const skinPromises = offers.map((uuid) =>
+    riotRequest(
+      "valorant-api.com",
+      `/v1/weapons/skinlevels/${uuid}`,
+      "GET",
+      { "Content-Type": "application/json" }
+    )
+  );
+
+  const results = await Promise.all(skinPromises);
+
+  return results.map((r) => ({
+    uuid: r?.data?.uuid,
+    name: r?.data?.displayName,
+    icon: r?.data?.displayIcon,
+  }));
+}
+
 async function fetchStore(puuid, accessToken, entitlementToken) {
   const data = await riotRequest(
     "pd.eu.a.pvp.net",
@@ -117,16 +137,17 @@ async function fetchStore(puuid, accessToken, entitlementToken) {
   return data;
 }
 
-function cleanStore(raw) {
+async function cleanStore(raw) {
   const panel = raw?.SkinsPanelLayout;
 
   if (!panel) {
     throw new Error('Unexpected store response shape');
   }
-
+    const offers = panel.SingleItemOffers ?? [];
+    const skins = await resolveSkins(offers);
   return {
-    offers: panel.SingleItemOffers ?? [],
-    remainingSeconds: panel.SingleItemOffersRemainingDurationInSeconds ?? 0,
+    skins,
+    // remainingSeconds: panel.SingleItemOffersRemainingDurationInSeconds ?? 0,
   };
 }
 
@@ -138,7 +159,7 @@ export async function handleProxy(accessToken, res) {
         ]);
 
         const rawStore = await fetchStore(puuid, accessToken, entitlementToken);
-        const store = cleanStore(rawStore);
+        const store = await cleanStore(rawStore);
 
         res.writeHead(200, { "content-type": "application/json" });
         //res.end(JSON.stringify({ message: "Proxy reached successfully", token: "received" }));

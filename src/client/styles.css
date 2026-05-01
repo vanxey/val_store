@@ -4,10 +4,6 @@
 }
 
 html, body{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
     font-family: monospace;
     font-size: medium;
     color: white;
@@ -15,4 +11,89 @@ html, body{
 
     height: 100%;
     width: 100%;
+}
+
+.text{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.wrapper{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+
+    height: 100%;
+    width: 100%;
+}
+
+#store-wrapper{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+#store-items{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: baseline;
+}
+
+#auth-section{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+input{
+    padding: 5px;
+    border: 1px solid rgb(192, 192, 192);
+    border-radius: 5px;
+    color: black;
+    background-color: white;
+    font-size: medium;
+}
+
+button{
+    padding: 5px;
+    border: 1px solid white;
+    border-radius: 30px;
+    color: white;
+    background-color: transparent;
+    font-size: medium;
+
+    transition: all 500ms ease-in;
+}
+
+button:hover{
+    border: 1px solid white;
+    color: black;
+    background-color: white;
+    cursor: pointer;
+}
+
+.skin-card{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: medium;
+    color: white;
+    padding: 10px;
+    align-items: center;
+    justify-content: center;
+
+    width: 200px;
+    height: auto;
+}
+
+img{
+    width: 200px;
+    height: auto;
 }

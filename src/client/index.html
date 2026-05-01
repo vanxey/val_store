@@ -6,9 +6,31 @@
     <title>Valo Store</title>
 
     <link rel="stylesheet" href="/styles.css">
-    <script src="/app.js"></script>
+    <script src="/app.js" defer></script>
 </head>
 <body>
-    <h1>This is an application to view the current valorant store.</h1>
+    <div class="wrapper">
+        <div class="text">
+            <h1>To view your current valorant store</h1>
+            <h2>enter your bearer token</h2>
+        </div>
+        <section id="auth-section">
+            <input 
+                type="password" 
+                id="token-input" 
+                placeholder="Paste your bearer token"
+                maxlength="2000"
+                autocomplete="off"
+                spellcheck="false"
+            />
+            <button id="fetch-btn">View Store</button>
+            <p id="error-msg" hidden></p>
+        </section>
+
+        <div id="store-wrapper" hidden>
+            <div id="store-items">
+            </div>
+        </div>
+    </div>
 </body>
 </html>
