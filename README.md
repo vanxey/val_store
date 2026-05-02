@@ -52,4 +52,9 @@ fetch("https://localhost:3000/api/store", {
 *   **Safety first:** We use `mkcert` so that the Riot tokens sent between your browser and the server are always encrypted.
 *   **Simple commands:** Using `node main.js` keeps things easy without needing extra tools like `npm` or `nodemon`.
 *   **Direct testing:** The console fetch is the fastest way to prove the proxy is successfully talking to Riot's servers.
-```
+
+Note: If you want to test the store tracker through the frontend, skip the "How to test" step and copy your bearer token into the input field located at `index.html`. This should display you the skins and their ingame names in the frontend.
+
+---
+
+### More information about the project can be found in my submitted hand-in!
