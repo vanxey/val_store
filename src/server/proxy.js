@@ -23,11 +23,8 @@ function riotRequest(host, path, method, headers, body = null) {
       res.on("data", (chunk) => { raw += chunk; });
 
       res.on("end", () => {
-        // console.log("Riot response status:", res.statusCode);
-        // console.log("Riot response body:", raw);
 
         if (res.statusCode < 200 || res.statusCode >= 300) {
-            //reject(new Error(`[Riot API] ${method} ${host}${path} failed (${res.statusCode}): ${raw}`));
            reject(new Error(`Upstream failed with status ${res.statusCode}`));
           return;
         }
@@ -35,7 +32,6 @@ function riotRequest(host, path, method, headers, body = null) {
         try {
           resolve(JSON.parse(raw));
         } catch {
-            //reject(new Error(`Riot returned non JSON response from ${host}${path}`));
           reject(new Error("Riot returned non JSON response"));
         }
       });
@@ -162,22 +158,12 @@ export async function handleProxy(accessToken, res) {
         const store = await cleanStore(rawStore);
 
         res.writeHead(200, { "content-type": "application/json" });
-        //res.end(JSON.stringify({ message: "Proxy reached successfully", token: "received" }));
         res.end(JSON.stringify(store));
 
     } catch (error) {
-        // console.error(error)
         console.error("Proxy error:", error.message);
+
         if (error.message.includes("Upstream failed with status")) {
-
-            // const status = parseInt(error.message.split(" ").pop());
-
-            // if (status === 400 || status === 401 || status === 403) {
-            //     res.writeHead(401, { "content-type": "application/json" });
-            //     res.end(JSON.stringify({ error: "Invalid or expired token" }));
-            //     return;
-            // }
-
             res.writeHead(502, { "content-type": "application/json" });
             res.end(JSON.stringify({ error: "Bad gateway" }));
             return;

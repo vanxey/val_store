@@ -60,7 +60,7 @@ function readBody(req, maxBytes = 2048) {
 
 function serveStatic (res, filePath){
     const ext = extname(filePath)
-    //console.log('Attempting to read:', filePath);
+
     if (!ALLOWED_EXTENSIONS.has(ext)) {
         res.writeHead(403, { "content-type": "text/plain" });
         res.end("Forbidden");
@@ -85,8 +85,6 @@ function serveStatic (res, filePath){
 export async function route (req, res){
     const method = req.method;
     const url = req.url;
-    // console.log(method, url);
-    // console.log('CLIENT_DIR:', CLIENT_DIR);
 
     if (method === "POST" && url === "/api/store") {
         let raw;
